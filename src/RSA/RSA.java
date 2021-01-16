@@ -20,6 +20,8 @@ public class RSA {
 	 * @throws Exception Thrown if a bad public key is received.
 	 */
 	public static byte[] encrypt(byte[] data, BigInteger publicKey, BigInteger publicExponent) throws Exception {
+		Util.globalLog.stepIn("Encrypting: " + Util.toHex(data));
+		Util.globalLog.log("Public Key: " + publicKey.toString() + "\nPublic Exponent: " + publicExponent.toString());
 		// Catch invalid public keys
 		if (publicKey.compareTo(BigInteger.ZERO) < 0) {
 			throw new Exception("Public key should not be negative.");
@@ -31,7 +33,10 @@ public class RSA {
 		if (plaintext.compareTo(publicKey) >= 0) {
 			throw new Exception("Key too small for data");
 		}
-		return plaintext.modPow(publicExponent, publicKey).toByteArray();
+		byte[] res = plaintext.modPow(publicExponent, publicKey).toByteArray();
+		Util.globalLog.log("Cypher Text: " + Util.toHex(res));
+		Util.globalLog.stepOut();
+		return res;
 	}
 
 	/**
@@ -45,6 +50,8 @@ public class RSA {
 	 * @throws Exception Thrown if a bad public key is received.
 	 */
 	public static byte[] decrypt(byte[] data, BigInteger publicKey, BigInteger privateExponent) throws Exception {
+		Util.globalLog.stepIn("Decrypting: " + Util.toHex(data));
+		Util.globalLog.log("Public Key: " + publicKey.toString() + "\nPrivate Exponent: " + privateExponent.toString());
 		// Catch invalid public keys
 		if (publicKey.compareTo(BigInteger.ZERO) < 0) {
 			throw new Exception("Public key should not be negative.");
@@ -56,7 +63,10 @@ public class RSA {
 		if (cyphertext.compareTo(publicKey) >= 0) {
 			throw new Exception("Key too small for data");
 		}
-		return cyphertext.modPow(privateExponent, publicKey).toByteArray();
+		byte[] res = cyphertext.modPow(privateExponent, publicKey).toByteArray();
+		Util.globalLog.log("Plain Text: " + Util.toHex(res));
+		Util.globalLog.stepOut();
+		return res;
 	}
 
 }

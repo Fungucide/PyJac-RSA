@@ -1,19 +1,24 @@
 package ui;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.math.BigInteger;
 
 import RSA.OAEP;
 import RSA.RSA;
 import RSA.Util;
 import javafx.geometry.Insets;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
+import javafx.stage.Popup;
 
 public class EncryptionPane extends SplitPane {
 
@@ -92,7 +97,6 @@ class InnerPane extends GridPane {
 				BigInteger exponent = new BigInteger(exponentField.getText());
 				byte[] res;
 				byte[] text = Util.toAscii(hexText.getText());
-				System.out.println("Public Key Length:" + publicKey.bitLength());
 
 				if (encrypt) {
 					if (pad.isSelected()) {
@@ -107,7 +111,15 @@ class InnerPane extends GridPane {
 				}
 				output.setText(res);
 			} catch (Exception e) {
-				e.printStackTrace();
+				Alert alert = new Alert(AlertType.ERROR);
+				alert.setTitle("Encryption / Decryption Error");
+				alert.setHeaderText(e.getMessage());
+				StringWriter sw = new StringWriter();
+				e.printStackTrace(new PrintWriter(sw));
+				TextArea ta = new TextArea(sw.toString());
+				ta.setEditable(false);
+				alert.getDialogPane().setExpandableContent(ta);
+				alert.showAndWait();
 			}
 		});
 		add(pad, 0, 6);

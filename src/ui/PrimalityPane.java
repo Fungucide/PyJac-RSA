@@ -1,11 +1,16 @@
 package ui;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.math.BigInteger;
 
 import RSA.Util;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.VBox;
 
 public class PrimalityPane extends VBox {
@@ -39,7 +44,15 @@ public class PrimalityPane extends VBox {
 				}
 				log.setIsActive(false);
 			} catch (Exception e) {
-				e.printStackTrace();
+				Alert alert = new Alert(AlertType.ERROR);
+				alert.setTitle("Prime Checker Error");
+				alert.setHeaderText(e.getMessage());
+				StringWriter sw = new StringWriter();
+				e.printStackTrace(new PrintWriter(sw));
+				TextArea ta = new TextArea(sw.toString());
+				ta.setEditable(false);
+				alert.getDialogPane().setExpandableContent(ta);
+				alert.showAndWait();
 			}
 		});
 		result = new Label();

@@ -1,12 +1,16 @@
 package ui;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.math.BigInteger;
 
 import RSA.Util;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.VBox;
 
 public class KeyGenerationPane extends VBox {
@@ -43,34 +47,46 @@ public class KeyGenerationPane extends VBox {
 
 		generate = new Button("Generate Key");
 		generate.setOnAction(action -> {
-			BigInteger p, q, n, m, e, d;
-			// If p or q are empty set them.
-			if (textAreas[0].getText().isBlank()) {
-				p = Util.randomPrime(Integer.parseInt(keySizeField.getText()));
-				textAreas[0].setText(p.toString());
-			} else {
-				p = new BigInteger(textAreas[0].getText());
-			}
-			if (textAreas[1].getText().isBlank()) {
-				q = Util.randomPrime(Integer.parseInt(keySizeField.getText()));
-				textAreas[1].setText(q.toString());
-			} else {
-				q = new BigInteger(textAreas[1].getText());
-			}
-			n = p.multiply(q);
-			m = (p.subtract(BigInteger.ONE)).multiply(q.subtract(BigInteger.ONE));
-			if (textAreas[4].getText().isBlank()) {
-				e = Util.randomBigInteger(16);
-				e = e.divide(e.gcd(m));
-				textAreas[4].setText(e.toString());
-			} else {
-				e = new BigInteger(textAreas[4].getText());
-			}
-			d = e.modInverse(m);
+			try {
+				BigInteger p, q, n, m, e, d;
+				// If p or q are empty set them.
+				if (textAreas[0].getText().isBlank()) {
+					p = Util.randomPrime(Integer.parseInt(keySizeField.getText()));
+					textAreas[0].setText(p.toString());
+				} else {
+					p = new BigInteger(textAreas[0].getText());
+				}
+				if (textAreas[1].getText().isBlank()) {
+					q = Util.randomPrime(Integer.parseInt(keySizeField.getText()));
+					textAreas[1].setText(q.toString());
+				} else {
+					q = new BigInteger(textAreas[1].getText());
+				}
+				n = p.multiply(q);
+				m = (p.subtract(BigInteger.ONE)).multiply(q.subtract(BigInteger.ONE));
+				if (textAreas[4].getText().isBlank()) {
+					e = Util.randomBigInteger(16);
+					e = e.divide(e.gcd(m));
+					textAreas[4].setText(e.toString());
+				} else {
+					e = new BigInteger(textAreas[4].getText());
+				}
+				d = e.modInverse(m);
 
-			textAreas[2].setText(n.toString());
-			textAreas[3].setText(m.toString());
-			textAreas[5].setText(d.toString());
+				textAreas[2].setText(n.toString());
+				textAreas[3].setText(m.toString());
+				textAreas[5].setText(d.toString());
+			} catch (Exception e) {
+				Alert alert = new Alert(AlertType.ERROR);
+				alert.setTitle("Key Generation Error");
+				alert.setHeaderText(e.getMessage());
+				StringWriter sw = new StringWriter();
+				e.printStackTrace(new PrintWriter(sw));
+				TextArea ta = new TextArea(sw.toString());
+				ta.setEditable(false);
+				alert.getDialogPane().setExpandableContent(ta);
+				alert.showAndWait();
+			}
 		});
 		getChildren().add(generate);
 	}
