@@ -1,29 +1,12 @@
 package RSA;
 
 import java.math.BigInteger;
-import java.util.Random;
-import java.util.concurrent.ThreadLocalRandom;
 
+/**
+ * A static class containing the methods used for encryption and decryption
+ * Reference: https://www.scribd.com/document/490155524/MAT315-Presentation
+ */
 public class RSA {
-
-	/*
-	 * https://www.scribd.com/document/490155524/MAT315-Presentation SHA-OEAP sha512
-	 */
-
-	public static byte[] decrypt(byte[] data, BigInteger publicKey, BigInteger privateExponent) throws Exception {
-		// Catch invalid public keys
-		if (publicKey.compareTo(BigInteger.ZERO) < 0) {
-			throw new Exception("Public key should not be negative.");
-		} else if (publicKey.equals(BigInteger.ZERO)) {
-			throw new Exception("Public key should not be 0.");
-		}
-		// Convert the data to a single BigInteger
-		BigInteger cyphertext = new BigInteger(data);
-		if (cyphertext.compareTo(publicKey) >= 0) {
-			throw new Exception("Key too small for data");
-		}
-		return cyphertext.modPow(privateExponent, publicKey).toByteArray();
-	}
 
 	/**
 	 * Encrypts the data based on the publicKey and publicExponent
@@ -34,8 +17,7 @@ public class RSA {
 	 * @param publicExponent The public exponent that the data is going to be
 	 *                       encrypted with
 	 * @return The encrypted value of data
-	 * @throws Exception Thrown if a bad public key is received or if the data is
-	 *                   not properly padded
+	 * @throws Exception Thrown if a bad public key is received.
 	 */
 	public static byte[] encrypt(byte[] data, BigInteger publicKey, BigInteger publicExponent) throws Exception {
 		// Catch invalid public keys
@@ -50,6 +32,31 @@ public class RSA {
 			throw new Exception("Key too small for data");
 		}
 		return plaintext.modPow(publicExponent, publicKey).toByteArray();
+	}
+
+	/**
+	 * Decrypts the data based on the publicKey and privateExponent
+	 * 
+	 * @param data            A byte array with the encrypted data
+	 * @param publicKey       The public key that will be used to decrypt the data
+	 * @param privateExponent The private exponent that the data will be decrypted
+	 *                        with
+	 * @return The decrypted value of data
+	 * @throws Exception Thrown if a bad public key is received.
+	 */
+	public static byte[] decrypt(byte[] data, BigInteger publicKey, BigInteger privateExponent) throws Exception {
+		// Catch invalid public keys
+		if (publicKey.compareTo(BigInteger.ZERO) < 0) {
+			throw new Exception("Public key should not be negative.");
+		} else if (publicKey.equals(BigInteger.ZERO)) {
+			throw new Exception("Public key should not be 0.");
+		}
+		// Convert the data to a single BigInteger
+		BigInteger cyphertext = new BigInteger(data);
+		if (cyphertext.compareTo(publicKey) >= 0) {
+			throw new Exception("Key too small for data");
+		}
+		return cyphertext.modPow(privateExponent, publicKey).toByteArray();
 	}
 
 }

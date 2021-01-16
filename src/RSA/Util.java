@@ -10,26 +10,8 @@ public class Util {
 
 	private static final char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
 	private static final int PRIMALITY_CHECK_ITERATIONS = 50;
-	public static StepTreeView primeLog = null;
-	public static StepTreeView globalLog = null;
-
-	private static void log(String message) {
-		if (globalLog != null) {
-			globalLog.log(message);
-		}
-	}
-
-	private static void stepIn(String message) {
-		if (globalLog != null) {
-			globalLog.stepIn(message);
-		}
-	}
-
-	private static void stepOut() {
-		if (globalLog != null) {
-			globalLog.stepOut();
-		}
-	}
+	public static StepTreeView primeLog = new StepTreeView("Prime Checker Log");
+	public static StepTreeView globalLog = new StepTreeView("Global Log");
 
 	/**
 	 * Returns a random prime BigInteger of size bits. The first and second bits are
@@ -39,6 +21,7 @@ public class Util {
 	 * @return A random prime BigInteger of size bits
 	 */
 	public static BigInteger randomPrime(int bits) {
+		globalLog.stepIn("randomPrime(" + bits + ")");
 		BigInteger prime;
 		// Generate random number and repeat if it is not prime
 		do {
@@ -46,6 +29,8 @@ public class Util {
 			// prime
 			prime = randomBigInteger(bits).setBit(0);
 		} while (!isPrime(prime));
+		globalLog.appendToCurrent(": " + prime.toString());
+		globalLog.stepOut();
 		return prime;
 	}
 
@@ -68,16 +53,18 @@ public class Util {
 	 * @return If n is probably a prime number
 	 */
 	public static boolean isPrime(BigInteger n) {
-		log("Check if " + n.toString() + " is prime.");
+		globalLog.stepIn("isPrime(" + n.toString() + ")");
+		primeLog.stepIn("isPrime(" + n.toString() + ")");
 		// Use some other function if n is sufficiently small (n<=10^10)
 		if (n.compareTo(BigInteger.valueOf(10000000000l)) <= 0) {
-			log("The number " + n.toString() + " is small enough to be checked normally.");
+			primeLog.log("The number " + n.toString() + " is small enough to be checked normally.");
 			return isPrime(n.longValue());
 		} else if (!n.testBit(0)) {
-			log("The number " + n.toString() + " is even so it is composite.");
+			primeLog.log("The number " + n.toString() + " is even so it is composite.");
 			return false;
 		}
-		log("The number " + n.toString() + "is too large and will be checked with Rabin Miller primality test.");
+		primeLog.log(
+				"The number " + n.toString() + "is too large and will be checked with Rabin Miller primality test.");
 
 		// Find values to the equation n=2^s*m where s is as large as possible
 		int s = 0;
@@ -88,7 +75,7 @@ public class Util {
 		}
 		// Find k by calculating n>>s
 		BigInteger m = nMinusOne.shiftRight(s);
-		log(n.toString() + " - 1 = 2^" + s + " * " + m.toString());
+		primeLog.log(n.toString() + " - 1 = 2^" + s + " * " + m.toString());
 
 		int prime = 0;
 		int composite = 0;
@@ -96,43 +83,46 @@ public class Util {
 		// Check to see if n is prime using base a
 		long maxValue = n.bitLength() > 63 ? Long.MAX_VALUE : n.longValue();
 		for (int i = 0; i < PRIMALITY_CHECK_ITERATIONS; i++) {
-			stepIn("Trial " + i);
+			primeLog.stepIn("Trial " + i);
 			BigInteger a = BigInteger.valueOf(randomLong(2, maxValue - 2));
-			log("Checking if n is prime using a=" + a.toString() + ".");
+			primeLog.log("Checking if n is prime using a=" + a.toString() + ".");
 			// First iteration is a^m % n
 			BigInteger res = a.modPow(m, n);
-			log("a^m % n = " + res.toString());
+			primeLog.log("a^m % n = " + res.toString());
 			// On first iteration if |a^m mod n| = 1 then say it is prime
 			if (res.equals(BigInteger.ONE) || res.equals(nMinusOne)) {
-				log("We can declare that " + n.toString() + " is prime.");
-				stepOut();
+				primeLog.log("We can declare that " + n.toString() + " is prime.");
+				primeLog.stepOut();
 				prime++;
 				continue;
 			}
 			boolean flag = false;
 			for (int j = 1; !flag && j < s; j++) {
 				res = res.modPow(BigInteger.TWO, n);
-				log("a^(2^" + j + " * m) % n = " + res.toString());
+				primeLog.log("a^(2^" + j + " * m) % n = " + res.toString());
 				if (res.equals(BigInteger.ONE)) {
 					// If a^[(2^j)*m] % n = 1 then we say is is composite
-					log("We can declare that " + n.toString() + " is composite.");
+					primeLog.log("We can declare that " + n.toString() + " is composite.");
 					composite++;
 					flag = true;
 				} else if (res.equals(nMinusOne)) {
-					log("We can declare that " + n.toString() + " is prime.");
+					primeLog.log("We can declare that " + n.toString() + " is prime.");
 					// If a^[(2^j)*m] % n = -1 then we say is is prime
 					prime++;
 					flag = true;
 				}
 			}
 			if (!flag) {
-				log("We can declare that " + n.toString() + " is composite.");
+				primeLog.log("We can declare that " + n.toString() + " is composite.");
 				composite++;
 			}
-			stepOut();
+			primeLog.stepOut();
 		}
-		log("Out of " + (prime + composite) + " trials, " + prime + " trials claimed n was prime.");
-		log("n is prime: " + (prime > composite));
+		primeLog.log("Out of " + (prime + composite) + " trials, " + prime + " trials claimed n was prime.");
+		primeLog.log("n is prime: " + (prime > composite));
+		globalLog.appendToCurrent(": " + (prime > composite));
+		globalLog.stepOut();
+		primeLog.appendToCurrent(": " + (prime > composite));
 		return prime > composite;
 	}
 
@@ -144,19 +134,26 @@ public class Util {
 	 * @return If n is a prime number
 	 */
 	private static boolean isPrime(long n) {
+		boolean isPrime = true;
 		if (n < 2) {
-			return false;
+			isPrime = false;
 		} else if (n == 2) {
-			return true;
+			isPrime = true;
+		} else if (n % 2l == 1) {
+			isPrime = false;
+			primeLog.log(n + " is divisible by 2");
 		}
-		boolean isPrime = (n % 2l == 1);
 		// Check n against all odd numbers greater than 2
 		for (int i = 3; isPrime && i * i <= n; i += 2) {
 			// If n is divisible by i then n is not prime
 			if (n % i == 0) {
+				primeLog.log(n + " is divisible by " + i);
 				isPrime = false;
 			}
 		}
+		globalLog.appendToCurrent(": " + isPrime);
+		globalLog.stepOut();
+		primeLog.appendToCurrent(": " + isPrime);
 		return isPrime;
 	}
 
@@ -214,6 +211,13 @@ public class Util {
 		return res;
 	}
 
+	/**
+	 * Converts and integer to an octet stream primitive.
+	 * 
+	 * @param value  The number to conver to OSP
+	 * @param length The length of the OSP
+	 * @return The OSP corresponding to value
+	 */
 	public static byte[] I2OSP(int value, int length) {
 		byte[] res = new byte[length];
 		for (int i = 0; i < length; i++) {

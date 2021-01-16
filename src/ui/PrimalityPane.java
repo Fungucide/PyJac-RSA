@@ -20,12 +20,17 @@ public class PrimalityPane extends VBox {
 		super();
 		topLabel = new Label("Enter a number and check if it is prime:");
 		inputField = new TextField();
+		inputField.textProperty().addListener((observer, oldValue, newValue) -> {
+			if (!newValue.matches("\\d*")) {
+				inputField.setText(newValue.replaceAll("[^\\d]", ""));
+			}
+		});
 		checkIsPrime = new Button("Check");
 		checkIsPrime.setOnAction(action -> {
 			try {
 				result.setText("");
 				BigInteger n = new BigInteger(inputField.getText().trim());
-				log.reset("isPrime(" + n.toString() + ")");
+				log.reset();
 				log.setIsActive(true);
 				if (Util.isPrime(n)) {
 					result.setText("The number is prime");
@@ -38,8 +43,7 @@ public class PrimalityPane extends VBox {
 			}
 		});
 		result = new Label();
-		log = new StepTreeView("");
-		Util.primeLog = log;
+		log = Util.primeLog;
 		getChildren().addAll(topLabel, inputField, checkIsPrime, log);
 	}
 }

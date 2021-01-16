@@ -1,5 +1,6 @@
 package ui;
 
+import RSA.Util;
 import javafx.application.Application;
 import javafx.geometry.Orientation;
 import javafx.scene.Scene;
@@ -30,7 +31,8 @@ public class Visualizer extends Application {
 		splitPane = new SplitPane();
 		tabPane = new TabPane();
 		setupTabs();
-		globalLog = new StepTreeView("Global Log");
+		globalLog = Util.globalLog;
+		globalLog.setIsActive(true);
 		borderPane = new BorderPane(globalLog);
 
 		splitPane.setOrientation(Orientation.VERTICAL);
@@ -44,7 +46,7 @@ public class Visualizer extends Application {
 
 	private void setupTabs() {
 		isPrimeTab = new Tab("Primality Check", new PrimalityPane());
-		tabPane.getTabs().add(isPrimeTab);	
+		tabPane.getTabs().add(isPrimeTab);
 		keyGenerationTab = new Tab("Key Generation", new KeyGenerationPane());
 		tabPane.getTabs().add(keyGenerationTab);
 		encryptionTab = new Tab("Encryption", new EncryptionPane());

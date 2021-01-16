@@ -36,6 +36,12 @@ public class StepTreeView extends TreeView<String> {
 		}
 	}
 
+	public void appendToCurrent(String message) {
+		if (active) {
+			currentItem.setValue(currentItem.getValue() + message);
+		}
+	}
+
 	public void setIsActive(boolean active) {
 		this.active = active;
 	}

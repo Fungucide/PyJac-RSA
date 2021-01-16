@@ -4,12 +4,34 @@ import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.util.concurrent.ThreadLocalRandom;
 
+/**
+ * A static class containing methods for OAEP padding. Source:
+ * https://tools.ietf.org/html/rfc8017#section-7.1.1
+ */
 public class OAEP {
 
+	/**
+	 * Pads the data to a certain keySize using the OAEP SHA-1 protocol. It also
+	 * uses a random seed for the random mask.
+	 * 
+	 * @param data    The data to be padded
+	 * @param keySize The size of the key that will encrypt the data
+	 * @return The masked data
+	 * @throws Exception Thrown if the size of data is too large
+	 */
 	public static byte[] pad(byte[] data, int keySize) throws Exception {
 		return pad(data, keySize, ThreadLocalRandom.current().nextLong());
 	}
 
+	/**
+	 * Pads the data to a certain keySize using the OAEP SHA-1 protocol.
+	 * 
+	 * @param data    The data to be padded
+	 * @param keySize The size of the key that will encrypt the data
+	 * @param seed    The seed for the random mask
+	 * @return The masked data
+	 * @throws Exception Thrown if the size of data is too large
+	 */
 	public static byte[] pad(byte[] data, int keySize, long seed) throws Exception {
 		int keySizeBytes = keySize / 8;
 		MessageDigest md = MessageDigest.getInstance("SHA-1");
@@ -37,7 +59,6 @@ public class OAEP {
 		byte[] randomSeed = new byte[hashSize];
 		SecureRandom.getInstanceStrong().setSeed(seed);
 		SecureRandom.getInstanceStrong().nextBytes(randomSeed);
-		randomSeed = Util.toAscii("AFA492BED3EA8D8CAA0B9D19E104AEAED7265FDF");
 		// The random mask from the mgf
 		byte[] dbMask = maskGenerator(randomSeed, keySizeBytes - hashSize - 1, md);
 		// XOR db and randomSeed
@@ -60,6 +81,15 @@ public class OAEP {
 		return res;
 	}
 
+	/**
+	 * Unpads the data using the OAEP SHA-1 Protocol.
+	 * 
+	 * @param data    The padded data
+	 * @param keySize The size of the key used to encrypt the padded data
+	 * @return The unpadded version of data
+	 * @throws Exception Thrown if the data size is not equal to the key size or
+	 *                   there was an error unpadding the message
+	 */
 	public static byte[] unpad(byte[] data, int keySize) throws Exception {
 		int keySizeBytes = keySize / 8;
 		MessageDigest md = MessageDigest.getInstance("SHA-1");
@@ -88,7 +118,7 @@ public class OAEP {
 		byte[] labelHash = md.digest();
 		for (int i = 0; i < labelHash.length; i++) {
 			if (labelHash[i] != db[i]) {
-				throw new Exception("Something went wrong when unpadding.");
+				throw new Exception("The label used when padding was not blank.");
 			}
 		}
 		int dataStart = labelHash.length;
@@ -96,7 +126,7 @@ public class OAEP {
 			dataStart++;
 		}
 		if (db[dataStart] != 0x01) {
-			throw new Exception("Something went wrong when unpadding.");
+			throw new Exception("The start of the message was not marked with a 0x01 byte.");
 		}
 		dataStart++;
 		byte[] res = new byte[db.length - dataStart];
@@ -106,6 +136,15 @@ public class OAEP {
 		return res;
 	}
 
+	/**
+	 * Mask generator function creates a mask based on the input. Source:
+	 * https://en.wikipedia.org/wiki/Mask_generation_function
+	 * 
+	 * @param input  The input string to make the mask from
+	 * @param length The length of the mask in bytes
+	 * @param md     A class to hash the data
+	 * @return A byte array containing a mask
+	 */
 	public static byte[] maskGenerator(byte[] input, int length, MessageDigest md) {
 		byte[] res = new byte[length];
 		int idx = 0;
