@@ -33,11 +33,16 @@ public class OAEP {
 	 * @throws Exception Thrown if the size of data is too large
 	 */
 	public static byte[] pad(byte[] data, int keySize, long seed) throws Exception {
+		Util.globalLog.stepIn("Pad: " + Util.toHex(data));
 		int keySizeBytes = keySize / 8;
 		MessageDigest md = MessageDigest.getInstance("SHA-1");
 		int hashSize = md.getDigestLength();
 		int maxMessageSize = keySizeBytes - 2 * hashSize - 2;
 		int padSize = maxMessageSize - data.length;
+		Util.globalLog.log("Key Size (Bytes): " + keySizeBytes);
+		Util.globalLog.log("Hash Size: " + hashSize);
+		Util.globalLog.log("Message Size: " + data.length);
+		Util.globalLog.log("Pad Size: " + padSize);
 		if (data.length > maxMessageSize) {
 			throw new Exception("Message too big after masking");
 		}
@@ -45,6 +50,7 @@ public class OAEP {
 		byte[] db = new byte[hashSize + padSize + 1 + data.length];
 		// Assume optional label is left blank
 		byte[] lHash = md.digest();
+		Util.globalLog.log("Label Hash: " + Util.toHex(lHash));
 		for (int i = 0; i < hashSize; i++) {
 			db[i] = lHash[i];
 		}
@@ -59,14 +65,17 @@ public class OAEP {
 		byte[] randomSeed = new byte[hashSize];
 		SecureRandom.getInstanceStrong().setSeed(seed);
 		SecureRandom.getInstanceStrong().nextBytes(randomSeed);
+		Util.globalLog.log("Random Seed: " + Util.toHex(randomSeed));
 		// The random mask from the mgf
 		byte[] dbMask = maskGenerator(randomSeed, keySizeBytes - hashSize - 1, md);
+		Util.globalLog.log("MGF(random): " + Util.toHex(dbMask));
 		// XOR db and randomSeed
 		for (int i = 0; i < db.length; i++) {
 			db[i] = (byte) (db[i] ^ dbMask[i]);
 		}
 
 		byte[] seedMask = maskGenerator(db, hashSize, md);
+		Util.globalLog.log("MGF(db): " + seedMask);
 		for (int i = 0; i < seedMask.length; i++) {
 			seedMask[i] = (byte) (seedMask[i] ^ randomSeed[i]);
 		}
@@ -78,6 +87,8 @@ public class OAEP {
 		for (int i = 0; i < db.length; i++) {
 			res[seedMask.length + i + 1] = db[i];
 		}
+		Util.globalLog.log("Padded Data: " + Util.toHex(res));
+		Util.globalLog.stepOut();
 		return res;
 	}
 
@@ -91,25 +102,33 @@ public class OAEP {
 	 *                   there was an error unpadding the message
 	 */
 	public static byte[] unpad(byte[] data, int keySize) throws Exception {
+		Util.globalLog.stepIn("Unpad: " + Util.toHex(data));
 		int keySizeBytes = keySize / 8;
 		MessageDigest md = MessageDigest.getInstance("SHA-1");
 		if (data.length != keySizeBytes) {
 			throw new Exception("Data size is not equal to key size");
 		}
 		int hashSize = md.getDigestLength();
+		Util.globalLog.log("Key Size (Bytes): " + keySizeBytes);
+		Util.globalLog.log("Hash Size: " + hashSize);
+		Util.globalLog.log("Message Size: " + data.length);
+
 		// Get the MGF of the db
 		byte[] dbXor = new byte[data.length - hashSize - 1];
 		for (int i = 0; i < dbXor.length; i++) {
 			dbXor[i] = data[1 + hashSize + i];
 		}
 		byte[] hash = maskGenerator(dbXor, hashSize, md);
+		Util.globalLog.log("MGF(db): " + Util.toHex(hash));
 		// XOR the hash with seedMask to get seed
 		byte[] randomSeed = new byte[hashSize];
 		for (int i = 0; i < hashSize; i++) {
 			randomSeed[i] = (byte) (hash[i] ^ data[1 + i]);
 		}
+		Util.globalLog.log("Random Seed: " + Util.toHex(randomSeed));
 		// This is what the mask should have been when masking db
 		byte[] dbMask = maskGenerator(randomSeed, keySizeBytes - hashSize - 1, md);
+		Util.globalLog.log("MGF(random): " + Util.toHex(dbMask));
 		byte[] db = new byte[data.length - hashSize - 1];
 		for (int i = 0; i < db.length; i++) {
 			db[i] = (byte) (data[1 + hashSize + i] ^ dbMask[i]);
@@ -133,6 +152,8 @@ public class OAEP {
 		for (int i = 0; i < res.length; i++) {
 			res[i] = db[dataStart + i];
 		}
+		Util.globalLog.log("Unpadded data: " + Util.toHex(res));
+		Util.globalLog.stepOut();
 		return res;
 	}
 
