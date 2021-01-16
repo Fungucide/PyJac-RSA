@@ -50,13 +50,13 @@ public class KeyGenerationPane extends VBox {
 			try {
 				BigInteger p, q, n, m, e, d;
 				// If p or q are empty set them.
-				if (textAreas[0].getText().isBlank()) {
+				if (textAreas[0].getText().isEmpty()) {
 					p = Util.randomPrime(Integer.parseInt(keySizeField.getText()));
 					textAreas[0].setText(p.toString());
 				} else {
 					p = new BigInteger(textAreas[0].getText());
 				}
-				if (textAreas[1].getText().isBlank()) {
+				if (textAreas[1].getText().isEmpty()) {
 					q = Util.randomPrime(Integer.parseInt(keySizeField.getText()));
 					textAreas[1].setText(q.toString());
 				} else {
@@ -64,7 +64,7 @@ public class KeyGenerationPane extends VBox {
 				}
 				n = p.multiply(q);
 				m = (p.subtract(BigInteger.ONE)).multiply(q.subtract(BigInteger.ONE));
-				if (textAreas[4].getText().isBlank()) {
+				if (textAreas[4].getText().isEmpty()) {
 					e = Util.randomBigInteger(16);
 					e = e.divide(e.gcd(m));
 					textAreas[4].setText(e.toString());

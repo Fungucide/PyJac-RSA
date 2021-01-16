@@ -98,7 +98,7 @@ public class Util {
 			}
 			boolean flag = false;
 			for (int j = 1; !flag && j < s; j++) {
-				res = res.modPow(BigInteger.TWO, n);
+				res = res.modPow(BigInteger.valueOf(2), n);
 				primeLog.log("a^(2^" + j + " * m) % n = " + res.toString());
 				if (res.equals(BigInteger.ONE)) {
 					// If a^[(2^j)*m] % n = 1 then we say is is composite
@@ -183,7 +183,7 @@ public class Util {
 			builder.append(HEX_ARRAY[v & 0x0F]);
 			builder.append(' ');
 		}
-		return builder.toString().strip();
+		return builder.toString().trim();
 	}
 
 	/**
